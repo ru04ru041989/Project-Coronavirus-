@@ -1,6 +1,8 @@
 # package
 from selenium import webdriver
 import pandas as pd
+from datetime import datetime
+import os.path
 
 
 driver = webdriver.Chrome()
@@ -40,4 +42,18 @@ driver.close()
 
 # create COVID df
 df = pd.DataFrame(df_body, columns = df_header)
-df.head(5)
+
+# adding date to df
+now = datetime.now().strftime('%Y-%m-%d')
+date = [now]*len(df)
+
+df['Date'] = date
+
+# append df to csv, if csv not exist, create and save df
+# if csv exist, check if date information has been update, if not, append to csv
+if os.path.isfile('COVID19.csv'):
+    csv_df = pd.read_csv('COVID19.csv')
+    if now not in list(df['Date']):
+        df.to_csv('COVID19.csv', mode = 'a', header = False, index = False)
+else:
+    df.to_csv('COVID19.csv', index = False)
