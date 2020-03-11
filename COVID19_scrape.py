@@ -1,5 +1,6 @@
 # package
 from selenium import webdriver
+import numpy as np
 import pandas as pd
 from datetime import datetime
 import os.path
@@ -15,9 +16,6 @@ df_header = []
 thlist = tb_head.find_elements_by_tag_name('th')
 for col in thlist:
     df_header.append(col.text.replace('\n',' '))
-
-# ['Country, Other', 'Total Cases', 'New Cases', 'Total Deaths', 'New Deaths', 
-# 'Total Recovered', 'Active Cases', 'Serious, Critical', 'Tot Cases/ 1M pop']
 
 
 # get the table body
@@ -51,9 +49,13 @@ df['Date'] = date
 
 # append df to csv, if csv not exist, create and save df
 # if csv exist, check if date information has been update, if not, append to csv
+print('/n current timestamp: /n')
+print(datetime.now())
+
 if os.path.isfile('COVID19.csv'):
     csv_df = pd.read_csv('COVID19.csv')
-    if now not in list(df['Date']):
+    if now not in list(csv_df['Date']):
         df.to_csv('COVID19.csv', mode = 'a', header = False, index = False)
 else:
     df.to_csv('COVID19.csv', index = False)
+    
