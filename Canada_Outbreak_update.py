@@ -69,16 +69,27 @@ search.send_keys('COVID-19')
 travel_tb = []
 web_travel_thead = driver.find_element_by_tag_name('thead')
 thlist = web_travel_thead.find_elements_by_tag_name('th')
-
-travel_tb.append([x.text for x in thlist])
+travel_th = [x.text for x in thlist] + ['Note']
+travel_tb.append(travel_th)
 
 web_travel_tbody = driver.find_element_by_tag_name('tbody')
 trlist = web_travel_tbody.find_elements_by_tag_name('tr')
+
+# add meaning of each level
+lv = {}
+panel_headings = driver.find_elements_by_class_name('panel-heading')
+for line in panel_headings:
+    lv[line.text.split(' - ')[0]] = line.text.split(' - ')[1]
+
 for row in trlist:
     tdlist = row.find_elements_by_tag_name('td')
     line = [x.text for x in tdlist]
     if line:
+        line.append(lv[line[-1]])
         travel_tb.append(line)
+
+
+
 
 driver.close() 
 
