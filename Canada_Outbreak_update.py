@@ -8,7 +8,37 @@ Canada Outbreak update
 from selenium import webdriver
 
 
+
+# print list as table
+## source: author: campkeith @ stackoverflow, question: #9535954: printing-lists-as-tabular-data
+## partically modify
+def format_matrix(header, matrix,
+                  top_format = '{:^{}}', left_format = '{:<{}}', cell_format = '{:>{}}', 
+                  row_delim = '\n', col_delim = ' | ', print_header = True):
+    #table = [header] + [[name] + row for name, row in zip(header, matrix)]
+    table = [header] + matrix
+
+    table_format = [['{:^{}}'] + len(header) * [top_format]] \
+                 + len(matrix) * [[left_format] + len(header) * [cell_format]]
+    
+    col_widths = [max(
+                      len(format.format(cell, 0))
+                      for format, cell in zip(col_format, col))
+                  for col_format, col in zip(zip(*table_format), zip(*table))]
+
+    if print_header:
+        table = [header] + [['='* int(n) for n in col_widths]] +matrix
+ 
+    return row_delim.join(
+               col_delim.join(
+                   format.format(cell, width)
+                   for format, cell, width in zip(row_format, row, col_widths))
+               for row_format, row in zip(table_format, table))
+
+
+
 driver = webdriver.Chrome()
+driver.implicitly_wait(3)
 driver.get('https://www.canada.ca/en/public-health/services/diseases/2019-novel-coronavirus-infection.html#a1')
 
 # navigate to the web tb, store info in tb
@@ -30,7 +60,7 @@ for row in trlist:
 # scrape travel notice in CAD
 driver.get('https://travel.gc.ca/travelling/health-safety/travel-health-notices')
 
-search_id = driver.find_element_by_id('wb-auto-4_filter')
+search_id = driver.find_element_by_class_name('dataTables_filter')
 search = search_id.find_element_by_tag_name('input')
 
 search.clear()
@@ -49,8 +79,14 @@ for row in trlist:
     line = [x.text for x in tdlist]
     if line:
         travel_tb.append(line)
-        
 
 driver.close() 
+
+
+
+# show tables
+print(format_matrix(tb[0], tb[1:]))
+print(format_matrix(travel_tb[0], travel_tb[1:]))
+
 
 
