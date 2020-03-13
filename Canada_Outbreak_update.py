@@ -6,6 +6,8 @@ Canada Outbreak update
 '''
 
 from selenium import webdriver
+import pandas as pd
+from datetime import datetime
 
 
 
@@ -28,7 +30,8 @@ def format_matrix(header, matrix,
 
     if print_header:
         table = [header] + [['='* int(n) for n in col_widths]] +matrix
- 
+        table_format.append([left_format] + len(header) * [cell_format])
+        
     return row_delim.join(
                col_delim.join(
                    format.format(cell, width)
@@ -36,12 +39,17 @@ def format_matrix(header, matrix,
                for row_format, row in zip(table_format, table))
 
 
-
 driver = webdriver.Chrome()
 driver.implicitly_wait(3)
 driver.get('https://www.canada.ca/en/public-health/services/diseases/2019-novel-coronavirus-infection.html#a1')
 
 # navigate to the web tb, store info in tb
+
+# updated date
+updated_date = driver.find_element_by_tag_name('caption')
+updated_date = updated_date.text
+
+# table
 tb = []
 web_tb = driver.find_element_by_class_name('table-responsive')
 
@@ -88,16 +96,24 @@ for row in trlist:
         line.append(lv[line[-1]])
         travel_tb.append(line)
 
-
-
-
 driver.close() 
 
+# read csv file, extract canada data
+df = pd.read_csv('COVID19.csv')
+now = datetime.now().strftime('%Y-%m-%d')
+focus_col = ['Total Cases','New Cases','Total Deaths','Total Recovered','Active Cases','Date']
 
+df = df[df['Country, Other'] == 'Canada'][focus_col]
+df_body = df.values.tolist()
+
+print(format_matrix(focus_col, df_body))
 
 # show tables
-print(format_matrix(tb[0], tb[1:]))
-print(format_matrix(travel_tb[0], travel_tb[1:]))
+print(updated_date)
+#print(format_matrix(tb[0], tb[1:]))
+
+print('')
+#print(format_matrix(travel_tb[0], travel_tb[1:]))
 
 
 
