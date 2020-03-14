@@ -9,6 +9,12 @@ from selenium import webdriver
 import pandas as pd
 from datetime import datetime
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+
+from email_info import username, password
 
 
 # print list as table
@@ -38,6 +44,14 @@ def format_matrix(header, matrix,
                    for format, cell, width in zip(row_format, row, col_widths))
                for row_format, row in zip(table_format, table))
 
+
+# create table as html
+def tbody_html(tb):
+    add_td = []
+    for row in tb:
+        add_td.append('<td>' + '</td><td>'.join(row)  + '</td>')
+    
+    return '<tr>' + '</tr><tr>'.join(add_td) + '</tr>'
 
 driver = webdriver.Chrome()
 driver.implicitly_wait(3)
@@ -96,6 +110,9 @@ for row in trlist:
         line.append(lv[line[-1]])
         travel_tb.append(line)
 
+for row in travel_tb:
+    del row[1]
+
 driver.close() 
 
 # read csv file, extract canada data
@@ -104,16 +121,78 @@ now = datetime.now().strftime('%Y-%m-%d')
 focus_col = ['Total Cases','New Cases','Total Deaths','Total Recovered','Active Cases','Date']
 
 df = df[df['Country, Other'] == 'Canada'][focus_col]
+df = df.fillna('0')
 df_body = df.values.tolist()
 
-print(format_matrix(focus_col, df_body))
 
-# show tables
-print(updated_date)
-#print(format_matrix(tb[0], tb[1:]))
+## sending email
 
-print('')
-#print(format_matrix(travel_tb[0], travel_tb[1:]))
+msg = MIMEMultipart()
+msg['Subject'] = 'Coronavirus stats in Canada today!'
+msg['From'] = username
+msg['To'] = username
 
+# create html
+html = '''\
+<html>
+<head>
+<title>Coronavirus stats in Canada today!</title>
+<body>
+<div id='container'>
+    <div>
+    <h2> COVID19 in Canada @ '''+ now + '''  </h2>
+    <p> Info from https://www.worldometers.info/coronavirus/</p>
+    <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+        <thead>
+            <tr> <th>'''+ '</th><th>'.join(focus_col) +''' </th></tr>
+        </thead>
+        <tbody>
+            ''' + tbody_html(df_body) +'''
+        </tbody>
+    </table>
+    </div>
+    <hr>
+    <div>
+    <h2> ''' + updated_date + ''' </h2>
+    <p>Info from https://www.canada.ca/en/public-health/services/diseases/2019-novel-coronavirus-infection.html</p>
+    <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+        <thead>
+            <tr> <th>'''+ '</th><th>'.join(tb[0]) +''' </th></tr>
+        </thead>
+        <tbody>
+            ''' + tbody_html(tb[1:]) +'''
+        </tbody>
+    </table>
+    </div>
+    
+    <div>
+    <h2> Travel notice </h2>
+    <table style="border:3px #cccccc solid;" cellpadding="10" border='1'>
+        <thead>
+            <tr> <th>'''+ '</th><th>'.join(travel_tb[0]) +''' </th></tr>
+        </thead>
+        <tbody>
+            ''' + tbody_html(travel_tb[1:]) +'''
+        </tbody>
+    </table>
+    </div>   
+</div>
+</body>
+</head>
+</html>
+    '''
 
+context = MIMEText(html,_subtype='html',_charset='utf-8')
+msg.attach(context)
 
+try:
+    mail = smtplib.SMTP('smtp.gmail.com', 587)
+    mail.ehlo()
+    mail.starttls()
+    mail.login(username, password)
+    mail.sendmail(username, username, msg.as_string())
+    mail.quit()
+    print('Email send')
+
+except:
+    print('Email not send')

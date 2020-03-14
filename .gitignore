@@ -1,2 +1,4 @@
 *.csv
 .bat
+email_info.py
+__pycache__/*
