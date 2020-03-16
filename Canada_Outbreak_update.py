@@ -65,7 +65,7 @@ updated_date = updated_date.text
 
 # table
 tb = []
-web_tb = driver.find_element_by_class_name('table-responsive')
+web_tb = driver.find_element_by_tag_name('table')
 
 thlist = web_tb.find_elements_by_tag_name('th')
 tb.append([x.text for x in thlist])
@@ -128,7 +128,7 @@ df_body = df.values.tolist()
 ## sending email
 
 msg = MIMEMultipart()
-msg['Subject'] = 'Coronavirus stats in Canada today!'
+msg['Subject'] = 'Coronavirus stats in Canada at ' + now
 msg['From'] = username
 msg['To'] = username
 
