@@ -6,11 +6,14 @@ from datetime import datetime
 import os.path
 
 
-driver = webdriver.Chrome()
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+driver = webdriver.Chrome(chrome_options=options)
 driver.get('https://www.worldometers.info/coronavirus/')
 
 # get table header
-tb_head = driver.find_element_by_xpath('//*[@id="main_table_countries"]/thead/tr[1]')
+tb_head = driver.find_element_by_xpath('//*[@id="main_table_countries_today"]/thead/tr[1]')
 df_header = []
 
 thlist = tb_head.find_elements_by_tag_name('th')
@@ -19,7 +22,7 @@ for col in thlist:
 
 
 # get the table body
-tb_body = driver.find_element_by_xpath('//*[@id="main_table_countries"]/tbody[1]')
+tb_body = driver.find_element_by_xpath('//*[@id="main_table_countries_today"]/tbody[1]')
 df_body = []
 
 # get tr element list
@@ -49,8 +52,6 @@ df['Date'] = date
 
 # append df to csv, if csv not exist, create and save df
 # if csv exist, check if date information has been update, if not, append to csv
-print('/n current timestamp: /n')
-print(datetime.now())
 
 if os.path.isfile('COVID19.csv'):
     csv_df = pd.read_csv('COVID19.csv')
